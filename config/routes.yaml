@@ -9,3 +9,8 @@
 
 controllers:
     resource: routing.controllers
+
+api_check:
+    path: /api/check
+    controller: App\Controller\RegistrationController::check
+    methods: GET
