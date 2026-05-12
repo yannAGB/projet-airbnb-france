@@ -21,10 +21,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 150)]
+    #[ORM\Column(length: 150, nullable:true)]
     private ?string $lastName = null;
 
-    #[ORM\Column(length: 200)]
+    #[ORM\Column(length: 200, nullable:true)]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 150)]
@@ -77,6 +77,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'id_user')]
     private Collection $payments;
+
+
 
 
 
@@ -344,6 +346,5 @@ public function getUserIdentifier(): string
 {
     return $this->email;
 }
-
 
 }
