@@ -39,7 +39,8 @@ class UserFixtures extends Fixture implements FixtureGroupInterface, DependentFi
         /* ---- Admin ---- */
         $admin = new User();
 
-        $admin->setName('Administrateur');
+        $admin->setLastName('Admin');
+        $admin->setFirstName('Administrateur');
         $admin->setUsername('admin');
         $admin->setEmail('admin@airbnbclone.com');
         $admin->setPassword($this->hasher->hashPassword($admin, 'password'));
@@ -60,9 +61,11 @@ class UserFixtures extends Fixture implements FixtureGroupInterface, DependentFi
         for ($i = 0; $i < 40; $i++) {
 
             $user     = new User();
-            $fullname = $faker->name();
+            $lastName = $faker->lastName();
+            $firstName = $faker->firstName();
 
-            $user->setName($fullname);
+            $user->setLastName($lastName);
+            $user->setFirstName($firstName);
             $user->setUsername(strtolower($faker->userName()));
             $user->setEmail($faker->unique()->safeEmail());
             $user->setPassword($this->hasher->hashPassword($user, 'password'));
@@ -73,7 +76,7 @@ class UserFixtures extends Fixture implements FixtureGroupInterface, DependentFi
             $user->setBirthday(\DateTimeImmutable::createFromMutable(
                 $faker->dateTimeBetween('-60 years', '-18 years')
             ));
-            $user->setSlug(strtolower($this->slugger->slug($fullname)));
+            $user->setSlug(strtolower($this->slugger->slug($firstName . '-' . $lastName)));
             $user->setCivilite($faker->randomElement(UserCivilite::cases()));
 
             $createdAt = \DateTimeImmutable::createFromMutable(

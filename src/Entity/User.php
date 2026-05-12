@@ -21,8 +21,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100)]
-    private ?string $name = null;
+    #[ORM\Column(length: 150)]
+    private ?string $lastName = null;
+
+    #[ORM\Column(length: 200)]
+    private ?string $firstName = null;
 
     #[ORM\Column(length: 150)]
     private ?string $username = null;
@@ -75,6 +78,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'id_user')]
     private Collection $payments;
 
+
+
     public function __construct()
     {
         $this->notifications = new ArrayCollection();
@@ -86,17 +91,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+	public function getLastName(): ?string
+	{
+		return $this->lastName;
+	}
 
-    public function setName(string $name): static
-    {
-        $this->name = $name;
+	public function setLastName(string $lastName): static
+	{
+		$this->lastName = $lastName;
 
-        return $this;
-    }
+		return $this;
+	}
+
+	public function getFirstName(): ?string
+	{
+		return $this->firstName;
+	}
+
+	public function setFirstName(string $firstName): static
+	{
+		$this->firstName = $firstName;
+
+		return $this;
+	}
 
     public function getUsername(): ?string
     {
@@ -327,4 +344,6 @@ public function getUserIdentifier(): string
 {
     return $this->email;
 }
+
+
 }

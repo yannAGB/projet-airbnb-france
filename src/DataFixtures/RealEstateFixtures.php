@@ -80,7 +80,8 @@ class RealEstateFixtures extends Fixture implements FixtureGroupInterface, Depen
 
 
             $realEstate->setAgenda   ($this->getReference('agenda-'    . rand(0, 29), Agenda::class  ));
-            $realEstate->setCategorie($this->getReference('category-'  . rand(0, 7 ), Categorie::class));
+            $realEstate->setCategorie($this->getReference('category-' . rand(0, 19), Categorie::class));
+			
 
             $manager->persist($realEstate);
 
