@@ -24,10 +24,21 @@ class DashboardController extends AbstractDashboardController
             ->setTitle('TrouvezMoi Com');
     }
 
-    public function configureMenuItems(): iterable
-    {
-        yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
-        yield MenuItem::linkTo(UserCrudController::class, 'Utilisateur', 'fas fa-list');
-        yield MenuItem::linkTo(AgendaCrudController::class, 'Agenda', 'fas fa-list');
-    }
+	public function configureMenuItems(): iterable
+	{
+		yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
+
+		yield MenuItem::section('Utilisateurs');
+		yield MenuItem::linkTo( UserCrudController::class,'Utilisateurs', 'fa fa-user');
+
+		yield MenuItem::section('Réservations');
+		yield MenuItem::linkTo(AgendaCrudController::class,'Agenda', 'fa fa-calendar');
+				
+		yield MenuItem::section('Immobilier');
+		yield MenuItem::linkTo(RealEstateCrudController::class,'Biens', 'fa fa-building' );
+		yield MenuItem::linkTo(CategorieCrudController::class,'Catégories', 'fa fa-tags' );
+
+		yield MenuItem::section('Paiements');
+		yield MenuItem::linkTo(PaymentCrudController::class,'Paiements', 'fa fa-credit-card' );
+	}
 }
