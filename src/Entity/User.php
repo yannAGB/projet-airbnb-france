@@ -78,10 +78,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'id_user')]
     private Collection $payments;
 
-
-
-
-
     public function __construct()
     {
         $this->notifications = new ArrayCollection();

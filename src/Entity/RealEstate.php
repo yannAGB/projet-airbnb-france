@@ -97,6 +97,13 @@ class RealEstate
         $this->images = new ArrayCollection();
     }
 
+	public function __toString(): string
+	{
+		return $this->title ?? 'Bien #' . $this->id;
+	}
+
+
+
     public function getId(): ?int
     {
         return $this->id;
