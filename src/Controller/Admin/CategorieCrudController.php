@@ -33,7 +33,7 @@ class CategorieCrudController extends AbstractCrudController
             AssociationField::new('parent')
                 ->setFormTypeOption('choice_label', 'title'),
 
-            FormField::addTab('Dates'),
+            /* FormField::addTab('Dates'), */
 
 			DateTimeField::new('created_at')
 				->hideOnForm(),
