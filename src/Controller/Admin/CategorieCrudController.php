@@ -27,14 +27,19 @@ class CategorieCrudController extends AbstractCrudController
 
             TextField::new('title'),
             TextField::new('slug'),
+
             TextEditorField::new('description'),
 
-            AssociationField::new('parent'),
+            AssociationField::new('parent')
+                ->setFormTypeOption('choice_label', 'title'),
 
             FormField::addTab('Dates'),
 
-            DateTimeField::new('created_at')->hideOnForm(),
-            DateTimeField::new('updated_at')->hideOnForm(),
+			DateTimeField::new('created_at')
+				->hideOnForm(),
+
+			DateTimeField::new('updated_at')
+				->hideOnForm(),
         ];
     }
 }
