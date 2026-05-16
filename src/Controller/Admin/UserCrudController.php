@@ -40,10 +40,10 @@ class UserCrudController extends AbstractCrudController
     {
         return [
 
-            /* COLONNE ID (index uniquement, hors tabs) */
+            /* Colonne ID (index uniquement) */
             IdField::new('id')->onlyOnIndex(),
 
-            /* ONGLET 1 - Informations personnelles */
+            /* Informations personnelles */
             FormField::addTab('👤 Informations personnelles')
                 ->onlyOnForms(),
 
@@ -74,7 +74,7 @@ class UserCrudController extends AbstractCrudController
                 ->formatValue(fn ($value) => $value?->label()),
 
 
-           /*  ONGLET 2 - Accès & Permissions */
+           /* Accès & Permissions */
             FormField::addTab('🔐 Accès & Permissions')
                 ->onlyOnForms(),
 
@@ -113,7 +113,7 @@ class UserCrudController extends AbstractCrudController
                 ->setColumns(6)
                 ->setRequired($pageName === Crud::PAGE_NEW),
 
-            /* ONGLET 3 - Historique */
+            /* Historique */
             FormField::addTab('📅 Historique')
                 ->onlyOnForms(),
 

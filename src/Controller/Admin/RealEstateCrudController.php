@@ -11,8 +11,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\{
     NumberField,
     BooleanField,
     DateTimeField,
-    AssociationField,
-    FormField
+    CollectionField,
+	AssociationField,
+    FormField,
 };
 
 class RealEstateCrudController extends AbstractCrudController
@@ -26,20 +27,21 @@ class RealEstateCrudController extends AbstractCrudController
     {
         return [
 
-            // 🔹 TAB 1 : Infos principales
+            // Informations principales
             FormField::addTab('Informations générales'),
 
             FormField::addColumn(6),
             TextField::new('title'),
             TextEditorField::new('description'),
             TextField::new('promotion'),
-
+			
             FormField::addColumn(6),
+			TextField::new('slug'),
             NumberField::new('price'),
             NumberField::new('max_travelers'),
             BooleanField::new('is_online'),
 
-            // 🔹 TAB 2 : Capacité
+            // Capacité
             FormField::addTab('Capacité'),
 
             FormField::addColumn(4),
@@ -51,7 +53,7 @@ class RealEstateCrudController extends AbstractCrudController
             FormField::addColumn(4),
             NumberField::new('babies'),
 
-            // 🔹 TAB 3 : Adresse
+            // Adresse
             FormField::addTab('Adresse'),
 
             FormField::addColumn(6),
@@ -64,7 +66,7 @@ class RealEstateCrudController extends AbstractCrudController
             TextField::new('country'),
             TextField::new('addressLine2'),
 
-            // 🔹 TAB 4 : Localisation
+            // Localisation
             FormField::addTab('Géolocalisation'),
 
             FormField::addColumn(6),
@@ -73,18 +75,27 @@ class RealEstateCrudController extends AbstractCrudController
             FormField::addColumn(6),
             NumberField::new('longitude'),
 
-            // 🔹 TAB 5 : Relations
+            // Relations
             FormField::addTab('Relations'),
 
-            AssociationField::new('categorie'),
-            AssociationField::new('agenda'),
-            AssociationField::new('images'),
+            AssociationField::new('categorie')
+    			->setFormTypeOption('choice_label', 'title'),
 
-            // 🔹 TAB 6 : Dates
-            FormField::addTab('Dates'),
+            AssociationField::new('agenda')
+				->setFormTypeOption(
+					'choice_label',
+					'note'
+				),
+            CollectionField::new('images')
+				->onlyOnDetail(),
 
-            DateTimeField::new('created_at')->hideOnForm(),
-            DateTimeField::new('updated_at')->hideOnForm(),
+            // Dates
+            /* FormField::addTab('Dates'), */
+
+            DateTimeField::new('created_at')
+				->hideOnForm(),
+            DateTimeField::new('updated_at')
+				->hideOnForm(),
         ];
     }
 }

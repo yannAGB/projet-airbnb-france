@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: RealEstateRepository::class)]
 class RealEstate
@@ -73,11 +74,13 @@ class RealEstate
     #[ORM\Column]
     private ?bool $is_online = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $created_at = null;
+	#[Gedmo\Timestampable(on: 'create')]
+	#[ORM\Column]
+	private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $updated_at = null;
+	#[Gedmo\Timestampable(on: 'update')]
+	#[ORM\Column]
+	private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'realEstate')]
     private ?Agenda $agenda = null;
@@ -99,7 +102,7 @@ class RealEstate
 
 	public function __toString(): string
 	{
-		return $this->title ?? 'Bien #' . $this->id;
+		return $this->title ?? '';
 	}
 
 

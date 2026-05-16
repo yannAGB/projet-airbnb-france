@@ -13,4 +13,17 @@ enum AgendaStatus: string
 	case CANCELLED = 'cancelled';
 	case RESCHEDULED = 'rescheduled';
 	case NO_SHOW = 'no_show';
+
+	public function label(): string
+	{
+		return match ($this) {
+			self::PENDING => 'En attente',
+			self::CONFIRMED => 'Confirmé',
+			self::IN_PROGRESS => 'En cours',
+			self::COMPLETED => 'Terminé',
+			self::CANCELLED => 'Annulé',
+			self::RESCHEDULED => 'Reprogrammé',
+			self::NO_SHOW => 'Absent',
+		};
+	}
 }

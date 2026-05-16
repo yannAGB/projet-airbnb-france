@@ -4,6 +4,7 @@ namespace App\Entity;
 use App\Entity\Enum\PaymentStatus;
 use App\Repository\PaymentRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: PaymentRepository::class)]
 class Payment
@@ -16,9 +17,9 @@ class Payment
     #[ORM\Column(length: 255)]
     private ?string $id_stripe = null;
 
-    #[ORM\ManyToOne(inversedBy: 'payments')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $id_user = null;
+	#[ORM\ManyToOne(inversedBy: 'payments')]
+	#[ORM\JoinColumn(nullable: false)]
+	private ?User $user = null;
 
     #[ORM\Column]
     private ?float $amount = null;
@@ -32,6 +33,7 @@ class Payment
 	#[ORM\Column(type: 'string', enumType: PaymentStatus::class)]
 	private ?PaymentStatus $status = PaymentStatus::PENDING;
 
+	#[Gedmo\Timestampable(on: 'create')]
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
@@ -52,17 +54,17 @@ class Payment
         return $this;
     }
 
-    public function getIdUser(): ?User
-    {
-        return $this->id_user;
-    }
+	public function getUser(): ?User
+	{
+		return $this->user;
+	}
 
-    public function setIdUser(?User $id_user): static
-    {
-        $this->id_user = $id_user;
+	public function setUser(?User $user): static
+	{
+		$this->user = $user;
 
-        return $this;
-    }
+		return $this;
+	}
 
     public function getAmount(): ?float
     {

@@ -39,7 +39,7 @@ class AgendaCrudController extends AbstractCrudController
 					'Terminé' => AgendaStatus::COMPLETED,
 					'Annulé' => AgendaStatus::CANCELLED,
 				])
-				->formatValue(fn ($value) => $value?->value),
+				->formatValue(fn ($value) => $value?->label()),
 
 			FormField::addTab('Relations'),
 

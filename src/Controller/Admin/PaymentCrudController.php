@@ -6,46 +6,47 @@ use App\Entity\Payment;
 use App\Entity\Enum\PaymentStatus;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\{
-    IdField,
-    TextField,
-    NumberField,
-    DateTimeField,
-    AssociationField,
-    ChoiceField,
-    FormField
+	IdField,
+	TextField,
+	NumberField,
+	DateTimeField,
+	AssociationField,
+	ChoiceField,
+	FormField
 };
 
 class PaymentCrudController extends AbstractCrudController
 {
-    public static function getEntityFqcn(): string
-    {
-        return Payment::class;
-    }
+	public static function getEntityFqcn(): string
+	{
+		return Payment::class;
+	}
 
-    public function configureFields(string $pageName): iterable
-    {
-        return [
+	public function configureFields(string $pageName): iterable
+	{
+		return [
 
-            FormField::addTab('Paiement'),
+			FormField::addTab('Paiement'),
 
-            TextField::new('id_stripe'),
-            AssociationField::new('id_user'),
+			TextField::new('id_stripe'),
+			AssociationField::new('user'),
 
-            NumberField::new('amount'),
-            NumberField::new('taxe'),
-            NumberField::new('total'),
+			NumberField::new('amount'),
+			NumberField::new('taxe'),
+			NumberField::new('total'),
 
-            ChoiceField::new('status')
-                ->setChoices([
-                    'En attente' => PaymentStatus::PENDING,
-                    'Payé' => PaymentStatus::COMPLETED,
-                    'Échoué' => PaymentStatus::FAILED,
-                    'Annulé' => PaymentStatus::CANCELLED,
-                    'Remboursé' => PaymentStatus::REFUNDED,
-                    'Expiré' => PaymentStatus::EXPIRED,
-                ]),
+			ChoiceField::new('status')
+				->setChoices([
+					'En attente' => PaymentStatus::PENDING,
+					'Payé' => PaymentStatus::COMPLETED,
+					'Échoué' => PaymentStatus::FAILED,
+					'Annulé' => PaymentStatus::CANCELLED,
+					'Remboursé' => PaymentStatus::REFUNDED,
+					'Expiré' => PaymentStatus::EXPIRED,
+				])
+				->formatValue(fn ($value) => $value?->label()),
 
-            DateTimeField::new('created_at')->hideOnForm(),
-        ];
-    }
+			DateTimeField::new('created_at')->hideOnForm(),
+		];
+	}
 }
