@@ -55,7 +55,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
-    private ?bool $is_valid = null;
+    private ?bool $is_valid = false;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $last_login = null;
@@ -80,9 +80,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'user')]
     private Collection $payments;
-
-    #[ORM\Column]
-    private bool $isVerified = false;
 
     public function __construct()
     {
@@ -352,18 +349,6 @@ public function eraseCredentials(): void
 public function getUserIdentifier(): string
 {
     return (string) $this->email;
-}
-
-public function isVerified(): bool
-{
-    return $this->isVerified;
-}
-
-public function setIsVerified(bool $isVerified): static
-{
-    $this->isVerified = $isVerified;
-
-    return $this;
 }
 
 }
