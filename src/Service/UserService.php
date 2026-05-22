@@ -95,18 +95,17 @@ class UserService
         $user->setCivilite(
             UserCivilite::from($donnees['civilite'])
         );
-        $user->setRoles   ([$donnees['role'] ?? 'ROLE_USER']);
+        $user->setRoles([$donnees['role'] ?? 'ROLE_USER']);
         $user->setSlug(
             strtolower($this->slugger->slug(
                 $donnees['firstName'] . '-' . $donnees['lastName']
             ))
         );
-        $user->setStatus    (UserStatus::VALID    );
-        $user->setIsValid   (true                 );
-        $user->setIsValid(false                );
-        $user->setCreatedAt (new \DateTimeImmutable());
-        $user->setUpdatedAt (new \DateTimeImmutable());
-        $user->setLastLogin (new \DateTimeImmutable());
+        $user->setStatus   (UserStatus::VALID    );
+        $user->setIsValid  (false                );
+        $user->setCreatedAt(new \DateTimeImmutable());
+        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->setLastLogin(new \DateTimeImmutable());
 
         $this->em->persist($user);
         $this->em->flush();
@@ -133,21 +132,20 @@ class UserService
     public function serialiser(User $user): array
     {
         return [
-            'id'          => $user->getId(),
-            'lastName'    => $user->getLastName(),
-            'firstName'   => $user->getFirstName(),
-            'username'    => $user->getUsername(),
-            'email'       => $user->getEmail(),
-            'slug'        => $user->getSlug(),
-            'roles'       => $user->getRoles(),
-            'civilite'    => $user->getCivilite()?->value,
-            'status'      => $user->getStatus()?->value,
-            'is_valid'    => $user->isValid(),
-            'is_verified' => $user->isValid(),
-            'birthday'    => $user->getBirthday()?->format('Y-m-d'),
-            'created_at'  => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
-            'updated_at'  => $user->getUpdatedAt()?->format('Y-m-d H:i:s'),
-            'last_login'  => $user->getLastLogin()?->format('Y-m-d H:i:s'),
+            'id'         => $user->getId(),
+            'lastName'   => $user->getLastName(),
+            'firstName'  => $user->getFirstName(),
+            'username'   => $user->getUsername(),
+            'email'      => $user->getEmail(),
+            'slug'       => $user->getSlug(),
+            'roles'      => $user->getRoles(),
+            'civilite'   => $user->getCivilite()?->value,
+            'status'     => $user->getStatus()?->value,
+            'is_valid'   => $user->isValid(),
+            'birthday'   => $user->getBirthday()?->format('Y-m-d'),
+            'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'updated_at' => $user->getUpdatedAt()?->format('Y-m-d H:i:s'),
+            'last_login' => $user->getLastLogin()?->format('Y-m-d H:i:s'),
         ];
     }
 }
