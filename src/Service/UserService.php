@@ -148,4 +148,34 @@ class UserService
             'last_login' => $user->getLastLogin()?->format('Y-m-d H:i:s'),
         ];
     }
+
+	/* -------------------------------------------------- */
+	/*                      Login                         */
+	/* -------------------------------------------------- */
+	public function connecterUtilisateur(string $identifier, string $password): ?User
+	{
+		/* Cherche par email OU par username */
+		$user = $this->userRepository->findOneBy(['email'    => $identifier])
+			?? $this->userRepository->findOneBy(['username' => $identifier]);
+
+		if (!$user) {
+			return null;
+		}
+
+		/* Vérifie le mot de passe */
+		if (!$this->hasher->isPasswordValid($user, $password)) {
+			return null;
+		}
+
+		/* Vérifie que le compte est actif */
+		if (!$user->isValid()) {
+			return null;
+		}
+
+		/* Met à jour la date de dernière connexion */
+		$user->setLastLogin(new \DateTimeImmutable());
+		$this->em->flush();
+
+		return $user;
+	}
 }

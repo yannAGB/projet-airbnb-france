@@ -118,7 +118,7 @@ final class ApiAuthController extends AbstractController
     }
 
     /* -------------------------------------------------- */
-    /*         GET /api/me — utilisateur connecté         */
+    /*         GET /api/me - utilisateur connecté         */
     /* -------------------------------------------------- */
     #[Route('/me', name: 'me', methods: ['GET'])]
     public function me(#[CurrentUser] ?User $user): JsonResponse
@@ -135,4 +135,38 @@ final class ApiAuthController extends AbstractController
             'data'    => $this->userService->serialiser($user),
         ], Response::HTTP_OK);
     }
+
+	/* -------------------------------------------------- */
+	/*              POST /api/user/login                  */
+	/* -------------------------------------------------- */
+	#[Route('/user/login', name: 'user_login', methods: ['POST'])]
+	public function userLogin(Request $request): JsonResponse
+	{
+		$donnees = json_decode($request->getContent(), true);
+
+		if (empty($donnees['identifier']) || empty($donnees['password'])) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Identifiant et mot de passe obligatoires',
+			], Response::HTTP_BAD_REQUEST);
+		}
+
+		$user = $this->userService->connecterUtilisateur(
+			$donnees['identifier'],
+			$donnees['password']
+		);
+
+		if (!$user) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Identifiants incorrects ou compte inactif',
+			], Response::HTTP_UNAUTHORIZED);
+		}
+
+		return $this->json([
+			'success' => true,
+			'message' => 'Connexion réussie',
+			'data'    => $this->userService->serialiser($user),
+		], Response::HTTP_OK);
+	}
 }
