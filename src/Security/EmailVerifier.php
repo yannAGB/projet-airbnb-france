@@ -14,23 +14,28 @@ class EmailVerifier
 {
     public function __construct(
         private VerifyEmailHelperInterface $verifyEmailHelper,
-        private MailerInterface $mailer,
-        private EntityManagerInterface $entityManager,
-    ) {
-    }
+        private MailerInterface            $mailer,
+        private EntityManagerInterface     $entityManager,
+    ) {}
 
-    public function sendEmailConfirmation(string $verifyEmailRouteName, User $user, TemplatedEmail $email): void
+    public function sendEmailConfirmation(
+        string         $verifyEmailRouteName,
+        User           $user,
+        TemplatedEmail $email
+    ): void
     {
         $signatureComponents = $this->verifyEmailHelper->generateSignature(
             $verifyEmailRouteName,
             (string) $user->getId(),
-            (string) $user->getEmail()
+            (string) $user->getEmail(),
+			/* ID visible dans l'URL */
+            ['id' => $user->getId()]
         );
 
         $context = $email->getContext();
-        $context['signedUrl'] = $signatureComponents->getSignedUrl();
-        $context['expiresAtMessageKey'] = $signatureComponents->getExpirationMessageKey();
-        $context['expiresAtMessageData'] = $signatureComponents->getExpirationMessageData();
+        $context['signedUrl']             = $signatureComponents->getSignedUrl();
+        $context['expiresAtMessageKey']   = $signatureComponents->getExpirationMessageKey();
+        $context['expiresAtMessageData']  = $signatureComponents->getExpirationMessageData();
 
         $email->context($context);
 
@@ -42,7 +47,11 @@ class EmailVerifier
      */
     public function handleEmailConfirmation(Request $request, User $user): void
     {
-        $this->verifyEmailHelper->validateEmailConfirmationFromRequest($request, (string) $user->getId(), (string) $user->getEmail());
+        $this->verifyEmailHelper->validateEmailConfirmationFromRequest(
+            $request,
+            (string) $user->getId(),
+            (string) $user->getEmail()
+        );
 
         $user->setIsValid(true);
 
