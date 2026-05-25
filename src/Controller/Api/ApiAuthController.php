@@ -27,60 +27,69 @@ final class ApiAuthController extends AbstractController
     /* -------------------------------------------------- */
     /*              POST /api/register                    */
     /* -------------------------------------------------- */
-    #[Route('/register', name: 'register', methods: ['POST'])]
-    public function register(Request $request): JsonResponse
-    {
-        $donnees = json_decode($request->getContent(), true);
+	#[Route('/register', name: 'register', methods: ['POST'])]
+	public function register(Request $request): JsonResponse
+	{
+		$donnees = json_decode($request->getContent(), true);
 
-        /* Validation */
-        $validation = $this->userService->validerDonnees($donnees);
-        if (!$validation['success']) {
-            return $this->json($validation, Response::HTTP_BAD_REQUEST);
-        }
+		/* Validation */
+		$validation = $this->userService->validerDonnees($donnees);
+		if (!$validation['success']) {
+			return $this->json($validation, Response::HTTP_BAD_REQUEST);
+		}
 
-        /* Unicité email */
-        if ($this->userService->emailExiste($donnees['email'])) {
-            return $this->json([
-                'success' => false,
-                'message' => 'Cet email est déjà utilisé',
-            ], Response::HTTP_CONFLICT);
-        }
+		/* Unicité email */
+		if ($this->userService->emailExiste($donnees['email'])) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Cet email est déjà utilisé',
+			], Response::HTTP_CONFLICT);
+		}
 
-        /* Unicité username */
-        if ($this->userService->usernameExiste($donnees['username'])) {
-            return $this->json([
-                'success' => false,
-                'message' => 'Ce nom d\'utilisateur est déjà pris',
-            ], Response::HTTP_CONFLICT);
-        }
+		/* Unicité username */
+		if ($this->userService->usernameExiste($donnees['username'])) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Ce nom d\'utilisateur est déjà pris',
+			], Response::HTTP_CONFLICT);
+		}
 
-        /* Création */
-        try {
-            $user = $this->userService->creerUtilisateur($donnees);
-        } catch (\Exception $e) {
-            return $this->json([
-                'success' => false,
-                'message' => 'Erreur lors de la création du compte',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+		/* Création */
+		try {
+			$user = $this->userService->creerUtilisateur($donnees);
+		} catch (\Exception $e) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Erreur lors de la création du compte',
+			], Response::HTTP_INTERNAL_SERVER_ERROR);
+		}
 
-        /* Envoi email de vérification */
-        $this->emailVerifier->sendEmailConfirmation(
-            'api_auth_verify_email',
-            $user,
-            (new TemplatedEmail())
-                ->from(new Address('noreply@trouvezMoi.com', 'TrouvezMoi'))
-                ->to((string) $user->getEmail())
-                ->subject('Confirmez votre adresse email')
-                ->htmlTemplate('registration/confirmation_email.html.twig')
-        );
+		/* Envoi email de vérification — non bloquant */
+		try {
+			$this->emailVerifier->sendEmailConfirmation(
+				'api_auth_verify_email',
+				$user,
+				(new TemplatedEmail())
+					->from(new Address('noreply@trouvezMoi.com', 'TrouvezMoi'))
+					->to((string) $user->getEmail())
+					->subject('Confirmez votre adresse email')
+					->htmlTemplate('registration/confirmation_email.html.twig')
+			);
+		} catch (\Exception $e) {
+			/* L'utilisateur est créé même si l'email échoue */
+			return $this->json([
+				'success' => true,
+				'message' => 'Inscription réussie. Email de vérification non envoyé — contactez le support.',
+				'data'    => $this->userService->serialiser($user),
+			], Response::HTTP_CREATED);
+		}
 
-        return $this->json([
-            'success' => true,
-            'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
-            'data'    => $this->userService->serialiser($user),
-        ], Response::HTTP_CREATED);
-    }
+		return $this->json([
+			'success' => true,
+			'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
+			'data'    => $this->userService->serialiser($user),
+		], Response::HTTP_CREATED);
+	}
 
     /* -------------------------------------------------- */
     /*              GET /api/verify/email                 */
