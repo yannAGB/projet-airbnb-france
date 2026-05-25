@@ -92,39 +92,55 @@ final class ApiAuthController extends AbstractController
 	}
 
     /* -------------------------------------------------- */
-    /*              GET /api/verify/email                 */
-    /* -------------------------------------------------- */
-    #[Route('/verify/email', name: 'verify_email', methods: ['GET'])]
-    public function verifyEmail(
-        Request             $request,
-        TranslatorInterface $translator
-    ): JsonResponse
-    {
-        $user = $this->getUser();
+	/*              GET /api/verify/email                 */
+	/* -------------------------------------------------- */
+	#[Route('/verify/email', name: 'verify_email', methods: ['GET'])]
+	public function verifyEmail(
+		Request             $request,
+		TranslatorInterface $translator
+	): JsonResponse
+	{
+		/* Récupère l'ID depuis l'URL */
+		$id = $request->query->get('id');
 
-        if (!$user instanceof User) {
-            return $this->json([
-                'success' => false,
-                'message' => 'Non authentifié',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
+		if (!$id) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Paramètre ID manquant dans l\'URL',
+			], Response::HTTP_BAD_REQUEST);
+		}
 
-        try {
-            $this->emailVerifier->handleEmailConfirmation($request, $user);
-        } catch (VerifyEmailExceptionInterface $e) {
-            return $this->json([
-                'success' => false,
-                'message' => $translator->trans(
-                    $e->getReason(), [], 'VerifyEmailBundle'
-                ),
-            ], Response::HTTP_BAD_REQUEST);
-        }
+		/* Trouve l'utilisateur sans nécessiter d'authentification */
+		$user = $this->userService->trouverParId((int) $id);
 
-        return $this->json([
-            'success' => true,
-            'message' => 'Email vérifié avec succès. Votre compte est maintenant actif.',
-        ], Response::HTTP_OK);
-    }
+		if (!$user) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Utilisateur introuvable',
+			], Response::HTTP_NOT_FOUND);
+		}
+
+		if ($user->isValid()) {
+			return $this->json([
+				'success' => true,
+				'message' => 'Email déjà vérifié — votre compte est actif',
+			], Response::HTTP_OK);
+		}
+
+		try {
+			$this->emailVerifier->handleEmailConfirmation($request, $user);
+		} catch (VerifyEmailExceptionInterface $e) {
+			return $this->json([
+				'success' => false,
+				'message' => $translator->trans($e->getReason(), [], 'VerifyEmailBundle'),
+			], Response::HTTP_BAD_REQUEST);
+		}
+
+		return $this->json([
+			'success' => true,
+			'message' => 'Email vérifié avec succès. Votre compte est maintenant actif.',
+		], Response::HTTP_OK);
+	}
 
     /* -------------------------------------------------- */
     /*         GET /api/me - utilisateur connecté         */
