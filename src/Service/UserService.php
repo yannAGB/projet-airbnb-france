@@ -9,6 +9,7 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use App\Entity\AccessToken;
 
 class UserService
 {
@@ -86,7 +87,8 @@ class UserService
         $user->setFirstName($donnees['firstName']);
         $user->setUsername ($donnees['username'] );
         $user->setEmail    ($donnees['email']    );
-        $user->setPassword(
+        /* Hachage du mot de passe */
+		$user->setPassword(
             $this->hasher->hashPassword($user, $donnees['password'])
         );
         $user->setBirthday(
@@ -177,5 +179,34 @@ class UserService
 		$this->em->flush();
 
 		return $user;
+	}
+
+
+
+	/* -------------------------------------------------- */
+	/*              Génération du token                   */
+	/* -------------------------------------------------- */
+	public function genererToken(User $user): string
+	{
+		/* Supprime les anciens tokens expirés de cet utilisateur */
+		$this->userRepository->supprimerTokensUtilisateur($user);
+
+		/* Génère un token aléatoire sécurisé */
+		$valeur = bin2hex(random_bytes(32));
+
+		/* Expire dans 1 heure */
+		$expiration = new \DateTimeImmutable('+1 hour');
+
+		$token = new AccessToken($user, $valeur, $expiration);
+
+		$this->em->persist($token);
+		$this->em->flush();
+
+		return $valeur;
+	}
+
+	public function supprimerTokensUtilisateur(User $user): void
+	{
+		$this->userRepository->supprimerTokensUtilisateur($user);
 	}
 }

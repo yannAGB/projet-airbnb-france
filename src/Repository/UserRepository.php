@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\AccessToken;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -40,4 +41,15 @@ class UserRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+	public function supprimerTokensUtilisateur(User $user): void
+	{
+		$this->getEntityManager()
+			->createQueryBuilder()
+			->delete(AccessToken::class, 't')
+			->where('t.user = :user')
+			->setParameter('user', $user)
+			->getQuery()
+			->execute();
+	}
 }

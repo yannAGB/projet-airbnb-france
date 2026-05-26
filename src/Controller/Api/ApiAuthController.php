@@ -27,120 +27,150 @@ final class ApiAuthController extends AbstractController
     /* -------------------------------------------------- */
     /*              POST /api/register                    */
     /* -------------------------------------------------- */
-	#[Route('/register', name: 'register', methods: ['POST'])]
-	public function register(Request $request): JsonResponse
-	{
-		$donnees = json_decode($request->getContent(), true);
+    #[Route('/register', name: 'register', methods: ['POST'])]
+    public function register(Request $request): JsonResponse
+    {
+        $donnees = json_decode($request->getContent(), true);
 
-		/* Validation */
-		$validation = $this->userService->validerDonnees($donnees);
-		if (!$validation['success']) {
-			return $this->json($validation, Response::HTTP_BAD_REQUEST);
-		}
+        $validation = $this->userService->validerDonnees($donnees);
+        if (!$validation['success']) {
+            return $this->json($validation, Response::HTTP_BAD_REQUEST);
+        }
 
-		/* Unicité email */
-		if ($this->userService->emailExiste($donnees['email'])) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Cet email est déjà utilisé',
-			], Response::HTTP_CONFLICT);
-		}
+        if ($this->userService->emailExiste($donnees['email'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Cet email est déjà utilisé',
+            ], Response::HTTP_CONFLICT);
+        }
 
-		/* Unicité username */
-		if ($this->userService->usernameExiste($donnees['username'])) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Ce nom d\'utilisateur est déjà pris',
-			], Response::HTTP_CONFLICT);
-		}
+        if ($this->userService->usernameExiste($donnees['username'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ce nom d\'utilisateur est déjà pris',
+            ], Response::HTTP_CONFLICT);
+        }
 
-		/* Création */
-		try {
-			$user = $this->userService->creerUtilisateur($donnees);
-		} catch (\Exception $e) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Erreur lors de la création du compte',
-			], Response::HTTP_INTERNAL_SERVER_ERROR);
-		}
+        try {
+            $user = $this->userService->creerUtilisateur($donnees);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du compte',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-		/* Envoi email de vérification — non bloquant */
-		try {
-			$this->emailVerifier->sendEmailConfirmation(
-				'api_auth_verify_email',
-				$user,
-				(new TemplatedEmail())
-					->from(new Address('noreply@trouvezMoi.com', 'TrouvezMoi'))
-					->to((string) $user->getEmail())
-					->subject('Confirmez votre adresse email')
-					->htmlTemplate('registration/confirmation_email.html.twig')
-			);
-		} catch (\Exception $e) {
-			/* L'utilisateur est créé même si l'email échoue */
-			return $this->json([
-				'success' => true,
-				'message' => 'Inscription réussie. Email de vérification non envoyé — contactez le support.',
-				'data'    => $this->userService->serialiser($user),
-			], Response::HTTP_CREATED);
-		}
+        try {
+            $this->emailVerifier->sendEmailConfirmation(
+                'api_auth_verify_email',
+                $user,
+                (new TemplatedEmail())
+                    ->from(new Address('noreply@trouvezMoi.com', 'TrouvezMoi'))
+                    ->to((string) $user->getEmail())
+                    ->subject('Confirmez votre adresse email')
+                    ->htmlTemplate('registration/confirmation_email.html.twig')
+            );
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => true,
+                'message' => 'Inscription réussie. Email de vérification non envoyé.',
+                'data'    => $this->userService->serialiser($user),
+            ], Response::HTTP_CREATED);
+        }
 
-		return $this->json([
-			'success' => true,
-			'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
-			'data'    => $this->userService->serialiser($user),
-		], Response::HTTP_CREATED);
-	}
+        return $this->json([
+            'success' => true,
+            'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
+            'data'    => $this->userService->serialiser($user),
+        ], Response::HTTP_CREATED);
+    }
 
     /* -------------------------------------------------- */
-	/*              GET /api/verify/email                 */
-	/* -------------------------------------------------- */
-	#[Route('/verify/email', name: 'verify_email', methods: ['GET'])]
-	public function verifyEmail(
-		Request             $request,
-		TranslatorInterface $translator
-	): JsonResponse
-	{
-		/* Récupère l'ID depuis l'URL */
-		$id = $request->query->get('id');
+    /*              POST /api/login                       */
+    /* -------------------------------------------------- */
+    #[Route('/login', name: 'login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
+    {
+        $donnees = json_decode($request->getContent(), true);
 
-		if (!$id) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Paramètre ID manquant dans l\'URL',
-			], Response::HTTP_BAD_REQUEST);
-		}
+        if (empty($donnees['identifier']) || empty($donnees['password'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Identifiant et mot de passe obligatoires',
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
-		/* Trouve l'utilisateur sans nécessiter d'authentification */
-		$user = $this->userService->trouverParId((int) $id);
+        $user = $this->userService->connecterUtilisateur(
+            $donnees['identifier'],
+            $donnees['password']
+        );
 
-		if (!$user) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Utilisateur introuvable',
-			], Response::HTTP_NOT_FOUND);
-		}
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Identifiants incorrects ou compte inactif',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
 
-		if ($user->isValid()) {
-			return $this->json([
-				'success' => true,
-				'message' => 'Email déjà vérifié — votre compte est actif',
-			], Response::HTTP_OK);
-		}
+        /* Génération du token d'accès */
+        $token = $this->userService->genererToken($user);
 
-		try {
-			$this->emailVerifier->handleEmailConfirmation($request, $user);
-		} catch (VerifyEmailExceptionInterface $e) {
-			return $this->json([
-				'success' => false,
-				'message' => $translator->trans($e->getReason(), [], 'VerifyEmailBundle'),
-			], Response::HTTP_BAD_REQUEST);
-		}
+        return $this->json([
+            'success' => true,
+            'message' => 'Connexion réussie',
+            'token'   => $token,
+            'data'    => $this->userService->serialiser($user),
+        ], Response::HTTP_OK);
+    }
 
-		return $this->json([
-			'success' => true,
-			'message' => 'Email vérifié avec succès. Votre compte est maintenant actif.',
-		], Response::HTTP_OK);
-	}
+    /* -------------------------------------------------- */
+    /*              GET /api/verify/email                 */
+    /* -------------------------------------------------- */
+    #[Route('/verify/email', name: 'verify_email', methods: ['GET'])]
+    public function verifyEmail(
+        Request             $request,
+        TranslatorInterface $translator
+    ): JsonResponse
+    {
+        $id = $request->query->get('id');
+
+        if (!$id) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Paramètre ID manquant',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->userService->trouverParId((int) $id);
+
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Utilisateur introuvable',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($user->isValid()) {
+            return $this->json([
+                'success' => true,
+                'message' => 'Email déjà vérifié',
+            ], Response::HTTP_OK);
+        }
+
+        try {
+            $this->emailVerifier->handleEmailConfirmation($request, $user);
+        } catch (VerifyEmailExceptionInterface $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $translator->trans($e->getReason(), [], 'VerifyEmailBundle'),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Email vérifié avec succès. Votre compte est maintenant actif.',
+        ], Response::HTTP_OK);
+    }
 
     /* -------------------------------------------------- */
     /*         GET /api/me - utilisateur connecté         */
@@ -162,36 +192,26 @@ final class ApiAuthController extends AbstractController
     }
 
 	/* -------------------------------------------------- */
-	/*              POST /api/user/login                  */
+	/*         POST /api/logout - déconnexion             */
 	/* -------------------------------------------------- */
-	#[Route('/user/login', name: 'user_login', methods: ['POST'])]
-	public function userLogin(Request $request): JsonResponse
+	#[Route('/logout', name: 'logout', methods: ['POST'])]
+	public function logout(#[CurrentUser] ?User $user): JsonResponse
 	{
-		$donnees = json_decode($request->getContent(), true);
-
-		if (empty($donnees['identifier']) || empty($donnees['password'])) {
-			return $this->json([
-				'success' => false,
-				'message' => 'Identifiant et mot de passe obligatoires',
-			], Response::HTTP_BAD_REQUEST);
-		}
-
-		$user = $this->userService->connecterUtilisateur(
-			$donnees['identifier'],
-			$donnees['password']
-		);
-
 		if (!$user) {
 			return $this->json([
 				'success' => false,
-				'message' => 'Identifiants incorrects ou compte inactif',
+				'message' => 'Non authentifié',
 			], Response::HTTP_UNAUTHORIZED);
 		}
 
+		/* Supprime tous les tokens de l'utilisateur */
+		$this->userService->supprimerTokensUtilisateur($user);
+
 		return $this->json([
 			'success' => true,
-			'message' => 'Connexion réussie',
-			'data'    => $this->userService->serialiser($user),
+			'message' => 'Déconnexion réussie',
 		], Response::HTTP_OK);
 	}
+
+
 }

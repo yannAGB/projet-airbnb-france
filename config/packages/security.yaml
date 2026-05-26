@@ -14,14 +14,19 @@ security:
             security: false
 
         main:
-            lazy: true
+            stateless: true
             provider: app_user_provider
+            access_token:
+                token_handler: App\Security\AccessTokenHandler
+                token_extractors: header # lecture d'Authorization: Bearer <token>
 
     access_control:
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api/user/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/verify/email, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: PUBLIC_ACCESS } # ← temporaire, ce chemin sera remplacé avec JWT
+        - { path: ^/api/logout, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:
     security:
