@@ -16,28 +16,61 @@ class RealEstateRepository extends ServiceEntityRepository
         parent::__construct($registry, RealEstate::class);
     }
 
-//    /**
-//     * @return RealEstate[] Returns an array of RealEstate objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('r.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /* ---- Tous les logements en ligne ---- */
+    public function findAllOnline(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.is_online = :online')
+            ->setParameter('online', true)
+            ->orderBy('r.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-//    public function findOneBySomeField($value): ?RealEstate
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /* ---- Logements limités pour la page d'accueil ---- */
+    public function findForHome(int $limit = 6): array
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.is_online = :online')
+            ->setParameter('online', true)
+            ->orderBy('r.created_at', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /* ---- Un logement par slug ---- */
+    public function findOneBySlug(string $slug): ?RealEstate
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /* ---- Logements par catégorie ---- */
+    public function findByCategorie(string $categorieSlug): array
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.is_online = :online')
+            ->andWhere('c.slug = :slug')
+            ->setParameter('online', true)
+            ->setParameter('slug',   $categorieSlug)
+            ->orderBy('r.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
