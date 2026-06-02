@@ -22,25 +22,46 @@ final class ApiRealEstateController extends AbstractController
     #[Route('/real-estates', name: 'list', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        /* Paramètre optionnel ?limit=6 pour la home */
         $limit     = $request->query->getInt('limit', 0);
         $categorie = $request->query->get('categorie');
 
-        if ($categorie) {
-            $logements = $this->realEstateService->trouverParCategorie($categorie);
-        } elseif ($limit > 0) {
-            $logements = $this->realEstateService->getLogementsAccueil($limit);
-        } else {
-            $logements = $this->realEstateService->getTousLesLogements();
-        }
+        $logements = match(true) {
+            !empty($categorie) => $this->realEstateService->trouverParCategorie($categorie),
+            $limit > 0         => $this->realEstateService->getLogementsAccueil($limit),
+            default            => $this->realEstateService->getTousLesLogements(),
+        };
 
-        if (empty($logements)) {
-            return $this->json([
-                'success' => false,
-                'message' => 'Aucun logement trouvé',
-                'data'    => [],
-            ], Response::HTTP_OK);
-        }
+        return $this->json([
+            'success' => true,
+            'total'   => count($logements),
+            'data'    => $this->realEstateService->serialiserListe($logements),
+        ], Response::HTTP_OK);
+    }
+
+    /* -------------------------------------------------- */
+    /*         GET /api/real-estates/coup-de-coeur        */
+    /* -------------------------------------------------- */
+    #[Route('/real-estates/coup-de-coeur', name: 'coup_de_coeur', methods: ['GET'])]
+    public function coupDeCoeur(Request $request): JsonResponse
+    {
+        $limit    = $request->query->getInt('limit', 6);
+        $logements = $this->realEstateService->getCoupDeCoeur($limit);
+
+        return $this->json([
+            'success' => true,
+            'total'   => count($logements),
+            'data'    => $this->realEstateService->serialiserListe($logements),
+        ], Response::HTTP_OK);
+    }
+
+    /* -------------------------------------------------- */
+    /*         GET /api/real-estates/destinations         */
+    /* -------------------------------------------------- */
+    #[Route('/real-estates/destinations', name: 'destinations', methods: ['GET'])]
+    public function destinations(Request $request): JsonResponse
+    {
+        $limit    = $request->query->getInt('limit', 5);
+        $logements = $this->realEstateService->getDestinationsPopulaires($limit);
 
         return $this->json([
             'success' => true,
@@ -61,27 +82,6 @@ final class ApiRealEstateController extends AbstractController
             return $this->json([
                 'success' => false,
                 'message' => "Logement #$id introuvable",
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json([
-            'success' => true,
-            'data'    => $this->realEstateService->serialiser($logement),
-        ], Response::HTTP_OK);
-    }
-
-    /* -------------------------------------------------- */
-    /*         GET /api/real-estates/slug/{slug}          */
-    /* -------------------------------------------------- */
-    #[Route('/real-estates/slug/{slug}', name: 'show_by_slug', methods: ['GET'])]
-    public function showBySlug(string $slug): JsonResponse
-    {
-        $logement = $this->realEstateService->trouverParSlug($slug);
-
-        if (!$logement) {
-            return $this->json([
-                'success' => false,
-                'message' => "Logement « $slug » introuvable",
             ], Response::HTTP_NOT_FOUND);
         }
 
