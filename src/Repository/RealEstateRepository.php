@@ -30,7 +30,7 @@ class RealEstateRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /* ---- Logements limités pour la page d'accueil ---- */
+    /* ---- Logements pour la page d'accueil ---- */
     public function findForHome(int $limit = 6): array
     {
         return $this->createQueryBuilder('r')
@@ -45,20 +45,41 @@ class RealEstateRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /* ---- Un logement par slug ---- */
-    public function findOneBySlug(string $slug): ?RealEstate
+    /* ---- Coup de cœur ---- */
+    public function findCoupDeCoeur(int $limit = 6): array
     {
         return $this->createQueryBuilder('r')
             ->leftJoin('r.images',    'i')
             ->leftJoin('r.categorie', 'c')
             ->addSelect('i', 'c')
-            ->where('r.slug = :slug')
-            ->setParameter('slug', $slug)
+            ->where('r.is_online = :online')
+            ->andWhere('r.is_coup_de_coeur = :coup')
+            ->setParameter('online', true)
+            ->setParameter('coup',   true)
+            ->orderBy('r.likes', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getResult();
     }
 
-    /* ---- Logements par catégorie ---- */
+    /* ---- Destinations populaires ---- */
+    public function findDestinationsPopulaires(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.is_online = :online')
+            ->andWhere('r.is_destination_populaire = :dest')
+            ->setParameter('online', true)
+            ->setParameter('dest',   true)
+            ->orderBy('r.likes', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /* ---- Par catégorie ---- */
     public function findByCategorie(string $categorieSlug): array
     {
         return $this->createQueryBuilder('r')
@@ -72,5 +93,29 @@ class RealEstateRepository extends ServiceEntityRepository
             ->orderBy('r.created_at', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /* ---- Par slug ---- */
+    public function findOneBySlug(string $slug): ?RealEstate
+    {
+        return $this->createQueryBuilder('r')
+            ->leftJoin('r.images',    'i')
+            ->leftJoin('r.categorie', 'c')
+            ->addSelect('i', 'c')
+            ->where('r.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /* ---- Comptage pour les stats ---- */
+    public function countOnline(): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.is_online = :online')
+            ->setParameter('online', true)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }
