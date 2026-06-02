@@ -16,28 +16,35 @@ class CategorieRepository extends ServiceEntityRepository
         parent::__construct($registry, Categorie::class);
     }
 
-//    /**
-//     * @return Categorie[] Returns an array of Categorie objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /* ---- Toutes les catégories parentes ---- */
+    public function findParentes(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.categories', 'sub')
+            ->addSelect('sub')
+            ->where('c.parent IS NULL')
+            ->orderBy('c.title', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 
-//    public function findOneBySomeField($value): ?Categorie
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /* ---- Toutes les catégories ---- */
+    public function findToutes(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.parent', 'p')
+            ->addSelect('p')
+            ->orderBy('c.title', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /* ---- Comptage total ---- */
+    public function countAll(): int
+    {
+        return (int) $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
