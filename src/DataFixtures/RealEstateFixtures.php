@@ -70,6 +70,8 @@ class RealEstateFixtures extends Fixture implements FixtureGroupInterface, Depen
             $realEstate->setLongitude($faker->longitude());
             $realEstate->setLatitude($faker->latitude());
             $realEstate->setIsOnline($faker->boolean(95));
+			$realEstate->setIsCoupDeCoeur($i < 10);           
+			$realEstate->setIsDestinationPopulaire($i < 5);
 
             $createdAt = \DateTimeImmutable::createFromMutable(
                 $faker->dateTimeBetween('-2 years')
