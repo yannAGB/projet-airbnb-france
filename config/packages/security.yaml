@@ -24,9 +24,9 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/verify/email, roles: PUBLIC_ACCESS }
+        - { path: ^/api/real-estates, roles: PUBLIC_ACCESS }
         - { path: ^/api/logout, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:
     security:
