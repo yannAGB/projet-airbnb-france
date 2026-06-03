@@ -35,7 +35,7 @@ class Notification
 	private bool $is_read = false;
 
     public function getId(): ?int
-    {
+    { 
         return $this->id;
     }
 
