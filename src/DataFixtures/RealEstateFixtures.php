@@ -86,6 +86,8 @@ class RealEstateFixtures extends Fixture implements FixtureGroupInterface, Depen
 			
 
             $manager->persist($realEstate);
+			/* Référence pour les autres fixtures */
+			$this->addReference('real-estate-' . $i, $realEstate);
 
             /* ---- Images liées ---- */
             for ($j = 0; $j < rand(3, 8); $j++) {
