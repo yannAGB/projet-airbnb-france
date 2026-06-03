@@ -101,6 +101,11 @@ class RealEstate
 	#[ORM\Column(options: ['default' => false])]
 	private bool $is_destination_populaire = false;
 
+	#[ORM\ManyToOne(targetEntity: User::class)]
+	#[ORM\JoinColumn(nullable: true)]
+	private ?User $owner = null;
+
+
 	public function __construct()
 	{
 		$this->images = new ArrayCollection();
@@ -443,6 +448,17 @@ class RealEstate
 	public function setIsDestinationPopulaire(bool $is_destination_populaire): static
 	{
 		$this->is_destination_populaire = $is_destination_populaire;
+		return $this;
+	}
+
+	public function getOwner(): ?User
+	{
+		return $this->owner;
+	}
+
+	public function setOwner(?User $owner): static
+	{
+		$this->owner = $owner;
 		return $this;
 	}
 }
