@@ -27,6 +27,9 @@ security:
         - { path: ^/api/stats, roles: PUBLIC_ACCESS }
         - { path: ^/api/categories, roles: PUBLIC_ACCESS }
         - { path: ^/api/real-estates, roles: PUBLIC_ACCESS }
+        - { path: ^/api/bookings, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/notifications, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/dashboard/stats, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/logout, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
