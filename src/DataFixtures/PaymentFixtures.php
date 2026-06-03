@@ -36,7 +36,7 @@ class PaymentFixtures extends Fixture implements FixtureGroupInterface, Dependen
             $total  = $amount + $taxe;
 
             $payment->setIdStripe('pi_' . bin2hex(random_bytes(12)));
-            $payment->setIdUser($this->getReference('user-' . rand(0, 39), User::class));
+            $payment->setUser($this->getReference('user-' . rand(0, 39), User::class));
             $payment->setAmount($amount);
             $payment->setTaxe($taxe);
             $payment->setTotal($total);
