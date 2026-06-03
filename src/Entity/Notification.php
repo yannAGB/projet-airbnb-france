@@ -27,6 +27,13 @@ class Notification
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
+	#[ORM\ManyToOne(targetEntity: User::class)]
+	#[ORM\JoinColumn(nullable: true)]
+	private ?User $recipient = null;
+
+	#[ORM\Column(options: ['default' => false])]
+	private bool $is_read = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -79,4 +86,20 @@ class Notification
 
         return $this;
     }
+
+	public function getRecipient(): ?User { return $this->recipient; }
+
+	public function setRecipient(?User $recipient): static
+	{
+		$this->recipient = $recipient;
+		return $this;
+	}
+
+	public function isRead(): bool { return $this->is_read; }
+
+	public function setIsRead(bool $is_read): static
+	{
+		$this->is_read = $is_read;
+		return $this;
+	}
 }
