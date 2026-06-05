@@ -105,10 +105,19 @@ class RealEstate
 	#[ORM\JoinColumn(nullable: true)]
 	private ?User $owner = null;
 
+	#[ORM\Column(type: Types::JSON, nullable: true)]
+	private ?array $amenities = [];
+
+	/**
+	 * @var Collection<int, Like>
+	 */
+	#[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'realEstate')]
+	private Collection $reviews;
 
 	public function __construct()
 	{
 		$this->images = new ArrayCollection();
+		$this->reviews = new ArrayCollection();
 	}
 
 	public function __toString(): string
@@ -459,6 +468,24 @@ class RealEstate
 	public function setOwner(?User $owner): static
 	{
 		$this->owner = $owner;
+		return $this;
+	}
+
+	public function getAmenities(): ?array { return $this->amenities; }
+	public function setAmenities(?array $amenities): static
+	{
+		$this->amenities = $amenities;
+		return $this;
+	}
+
+	public function getReviews(): Collection { return $this->reviews; }
+
+	public function addReview(Like $like): static
+	{
+		if (!$this->reviews->contains($like)) {
+			$this->reviews->add($like);
+			$like->setRealEstate($this);
+		}
 		return $this;
 	}
 }
