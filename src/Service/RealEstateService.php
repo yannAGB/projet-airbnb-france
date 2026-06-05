@@ -4,11 +4,15 @@ namespace App\Service;
 
 use App\Entity\RealEstate;
 use App\Repository\RealEstateRepository;
+use App\Repository\LikeRepository;
+use App\Repository\BookingRepository;
 
 class RealEstateService
 {
     public function __construct(
-        private RealEstateRepository $realEstateRepository,
+		private RealEstateRepository $realEstateRepository,
+  		private LikeRepository       $likeRepository,
+    	private BookingRepository    $bookingRepository,
     ) {}
 
     /* -------------------------------------------------- */
@@ -55,67 +59,81 @@ class RealEstateService
         return $this->realEstateRepository->countOnline();
     }
 
+	/* ---- Avis d'un logement ---- */
+	public function getReviews(RealEstate $re): array
+	{
+		return $this->likeRepository->findByRealEstate($re);
+	}
+
+	public function getNoteMoyenne(RealEstate $re): float
+	{
+		return $this->likeRepository->getNoteMoyenne($re);
+	}
+
+	/* ---- Disponibilités (dates réservées) ---- */
+	public function getDisponibilites(RealEstate $re): array
+	{
+		$bookings = $this->bookingRepository->findByRealEstate($re);
+
+		return array_map(fn($b) => [
+			'dateArrivee' => $b->getDateArrivee()?->format('Y-m-d'),
+			'dateDepart'  => $b->getDateDepart() ?->format('Y-m-d'),
+			'statut'      => $b->getStatut()->value,
+		], $bookings);
+	}
+
+
     /* -------------------------------------------------- */
     /*               Sérialisation JSON                   */
     /* -------------------------------------------------- */
 
-    public function serialiser(RealEstate $logement): array
-    {
-        $premiereImage = null;
-        if (!$logement->getImages()->isEmpty()) {
-            $premiereImage = $logement->getImages()->first()->getName();
-        }
+/* ---- Sérialisation étendue avec reviews et amenities ---- */
+public function serialiserDetail(RealEstate $re): array
+{
+    $base    = $this->serialiserDetail($re);
+    $owner   = $re->getOwner();
+    $reviews = $this->getReviews($re);
 
-        $images = $logement->getImages()->map(
-            fn($img) => $img->getName()
-        )->toArray();
-
-        return [
-            'id'                    => $logement->getId(),
-            'title'                 => $logement->getTitle(),
-            'description'           => $logement->getDescription(),
-            'slug'                  => $logement->getSlug(),
-            'price'                 => $logement->getPrice(),
-            'promotion'             => $logement->getPromotion(),
-            'image'                 => $premiereImage,
-            'images'                => array_values($images),
-            'type'                  => $logement->getCategorie()?->getTitle(),
-            'is_coup_de_coeur'      => $logement->isCoupDeCoeur(),
-            'is_destination_populaire' => $logement->isDestinationPopulaire(),
-            'categorie'             => [
-                'id'    => $logement->getCategorie()?->getId(),
-                'title' => $logement->getCategorie()?->getTitle(),
-                'slug'  => $logement->getCategorie()?->getSlug(),
-            ],
-            'capacite'              => [
-                'maxTravelers' => $logement->getMaxTravelers(),
-                'adults'       => $logement->getAdults(),
-                'children'     => $logement->getChildren(),
-                'babies'       => $logement->getBabies(),
-            ],
-            'adresse'               => [
-                'numero'     => $logement->getStreetNumber(),
-                'rue'        => $logement->getStreetName(),
-                'codePostal' => $logement->getPostalCode(),
-                'complement' => $logement->getAddressLine2(),
-                'ville'      => $logement->getCity(),
-                'pays'       => $logement->getCountry(),
-            ],
-            'coordonnees'           => [
-                'latitude'  => $logement->getLatitude(),
-                'longitude' => $logement->getLongitude(),
-            ],
-            'likes'                 => $logement->getLikes(),
-            'is_online'             => $logement->isOnline(),
-            'created_at'            => $logement->getCreatedAt()?->format('Y-m-d H:i:s'),
-            'updated_at'            => $logement->getUpdatedAt()?->format('Y-m-d H:i:s'),
-        ];
+    $initiales = '';
+    if ($owner) {
+        $initiales = strtoupper(
+            substr($owner->getFirstName() ?? '', 0, 1) .
+            substr($owner->getLastName()  ?? '', 0, 1)
+        );
     }
+
+    return array_merge($base, [
+        'amenities'    => $re->getAmenities() ?? [],
+        'note_moyenne' => $this->getNoteMoyenne($re),
+        'nb_avis'      => count($reviews),
+        'hote'         => $owner ? [
+            'id'        => $owner->getId(),
+            'firstName' => $owner->getFirstName(),
+            'lastName'  => $owner->getLastName(),
+            'initiales' => $initiales,
+            'created_at'=> $owner->getCreatedAt()?->format('Y'),
+        ] : null,
+        'reviews'      => array_map(fn($like) => [
+            'id'        => $like->getId(),
+            'note'      => $like->getReview(),
+            'comment'   => $like->getComment(),
+            'created_at'=> $like->getCreatedAt()?->format('Y-m-d'),
+            'reviewer'  => [
+                'firstName' => $like->getReviewer()?->getFirstName() ?? 'Anonyme',
+                'lastName'  => $like->getReviewer()?->getLastName()  ?? '',
+                'initiales' => strtoupper(
+                    substr($like->getReviewer()?->getFirstName() ?? 'A', 0, 1) .
+                    substr($like->getReviewer()?->getLastName()  ?? 'N', 0, 1)
+                ),
+            ],
+        ], $reviews),
+    ]);
+}
 
     public function serialiserListe(array $logements): array
     {
         return array_map(
-            fn($logement) => $this->serialiser($logement),
+            fn($logement) => $this->serialiserDetail($logement),
             $logements
         );
     }
