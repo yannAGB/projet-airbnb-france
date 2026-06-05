@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Like;
+use App\Entity\RealEstate;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,29 @@ class LikeRepository extends ServiceEntityRepository
         parent::__construct($registry, Like::class);
     }
 
-//    /**
-//     * @return Like[] Returns an array of Like objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('l.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /* ---- Avis d'un logement ---- */
+    public function findByRealEstate(RealEstate $re): array
+    {
+        return $this->createQueryBuilder('l')
+            ->leftJoin('l.reviewer', 'u')
+            ->addSelect('u')
+            ->where('l.realEstate = :re')
+            ->setParameter('re', $re)
+            ->orderBy('l.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-//    public function findOneBySomeField($value): ?Like
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /* ---- Note moyenne d'un logement ---- */
+    public function getNoteMoyenne(RealEstate $re): float
+    {
+        $result = $this->createQueryBuilder('l')
+            ->select('AVG(l.review)')
+            ->where('l.realEstate = :re')
+            ->setParameter('re', $re)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return round((float) ($result ?? 0), 1);
+    }
 }
