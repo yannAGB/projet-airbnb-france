@@ -24,6 +24,14 @@ class Like
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
+	#[ORM\ManyToOne(targetEntity: RealEstate::class, inversedBy: 'reviews')]
+	#[ORM\JoinColumn(nullable: true)]
+	private ?RealEstate $realEstate = null;
+
+	#[ORM\ManyToOne(targetEntity: User::class)]
+	#[ORM\JoinColumn(nullable: true)]
+	private ?User $reviewer = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -64,4 +72,18 @@ class Like
 
         return $this;
     }
+
+	public function getRealEstate(): ?RealEstate { return $this->realEstate; }
+	public function setRealEstate(?RealEstate $re): static
+	{
+		$this->realEstate = $re;
+		return $this;
+	}
+
+	public function getReviewer(): ?User { return $this->reviewer; }
+	public function setReviewer(?User $u): static
+	{
+		$this->reviewer = $u;
+		return $this;
+	}
 }
