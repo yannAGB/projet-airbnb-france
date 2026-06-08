@@ -5,9 +5,9 @@ namespace App\Repository;
 use App\Entity\Booking;
 use App\Entity\Enum\BookingStatus;
 use App\Entity\User;
+use App\Entity\RealEstate;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-
 /**
  * @extends ServiceEntityRepository<Booking>
  */
@@ -90,4 +90,20 @@ class BookingRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+	public function findByRealEstate(RealEstate $re): array
+	{
+		return $this->createQueryBuilder('b')
+			->where('b.realEstate = :re')
+			->andWhere('b.statut IN (:statuts)')
+			->setParameter('re', $re)
+			->setParameter('statuts', [
+				BookingStatus::CONFIRME,
+				BookingStatus::EN_ATTENTE,
+				BookingStatus::A_CONFIRMER,
+			])
+			->orderBy('b.date_arrivee', 'ASC')
+			->getQuery()
+			->getResult();
+	}
 }
