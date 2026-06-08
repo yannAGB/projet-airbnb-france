@@ -89,6 +89,15 @@ class RealEstateFixtures extends Fixture implements FixtureGroupInterface, Depen
 			/* Référence pour les autres fixtures */
 			$this->addReference('real-estate-' . $i, $realEstate);
 
+			$amenitesPossibles = [
+				'Piscine privée', 'Wi-Fi gratuit', 'Climatisation',
+				'Jacuzzi', 'Barbecue', 'Parking gratuit',
+				'Jardin', 'Terrasse', 'Vue mer', 'Machine à laver',
+			];
+
+			shuffle($amenitesPossibles);
+			$realEstate->setAmenities(array_slice($amenitesPossibles, 0, rand(4, 7)));
+
             /* ---- Images liées ---- */
             for ($j = 0; $j < rand(3, 8); $j++) {
 
