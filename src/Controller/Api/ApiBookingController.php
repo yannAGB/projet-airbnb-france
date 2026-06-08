@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Service\BookingService;
+use App\Repository\RealEstateRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,7 @@ final class ApiBookingController extends AbstractController
 {
     public function __construct(
         private BookingService $bookingService,
+		private RealEstateRepository $realEstateRepository,
     ) {}
 
     /* -------------------------------------------------- */
@@ -94,4 +96,74 @@ final class ApiBookingController extends AbstractController
             'data'    => $this->bookingService->serialiser($booking),
         ], Response::HTTP_OK);
     }
+
+	/* -------------------------------------------------- */
+	/*         POST /api/bookings/create                  */
+	/* -------------------------------------------------- */
+	#[Route('/bookings/create', name: 'create', methods: ['POST'])]
+	public function create(
+		Request $request,
+		#[CurrentUser] ?User $user
+	): JsonResponse
+	{
+		if (!$user) {
+			return $this->json(['success' => false, 'message' => 'Non authentifié'],
+				Response::HTTP_UNAUTHORIZED);
+		}
+
+		$donnees = json_decode($request->getContent(), true);
+
+		$champsObligatoires = ['realEstateId', 'dateArrivee', 'dateDepart', 'nbVoyageurs'];
+		foreach ($champsObligatoires as $champ) {
+			if (empty($donnees[$champ])) {
+				return $this->json([
+					'success' => false,
+					'message' => "Le champ « $champ » est obligatoire",
+				], Response::HTTP_BAD_REQUEST);
+			}
+		}
+
+		$re = $this->realEstateRepository->find($donnees['realEstateId']);
+
+		if (!$re) {
+			return $this->json(['success' => false, 'message' => 'Logement introuvable'],
+				Response::HTTP_NOT_FOUND);
+		}
+
+		/* Empêcher le propriétaire de réserver son propre logement */
+		if ($re->getOwner()?->getId() === $user->getId()) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Vous ne pouvez pas réserver votre propre logement',
+			], Response::HTTP_FORBIDDEN);
+		}
+
+		try {
+			$arrivee = new \DateTimeImmutable($donnees['dateArrivee']);
+			$depart  = new \DateTimeImmutable($donnees['dateDepart']);
+			$nuits   = (int) $arrivee->diff($depart)->days;
+
+			$booking = $this->bookingService->creerReservation(
+				guest       : $user,
+				realEstate  : $re,
+				dateArrivee : $arrivee,
+				dateDepart  : $depart,
+				nbNuits     : $nuits,
+				nbVoyageurs : (int) $donnees['nbVoyageurs'],
+				montant     : $re->getPrice() * $nuits,
+				note        : $donnees['note'] ?? null,
+			);
+		} catch (\Exception $e) {
+			return $this->json([
+				'success' => false,
+				'message' => 'Erreur lors de la création de la réservation',
+			], Response::HTTP_INTERNAL_SERVER_ERROR);
+		}
+
+		return $this->json([
+			'success' => true,
+			'message' => 'Réservation créée avec succès',
+			'data'    => $this->bookingService->serialiser($booking),
+		], Response::HTTP_CREATED);
+	}
 }
