@@ -32,6 +32,8 @@ security:
         - { path: ^/api/dashboard/stats, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/logout, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/real-estates, roles: PUBLIC_ACCESS }
+        - { path: ^/api/bookings/create, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
