@@ -87,7 +87,74 @@ final class ApiRealEstateController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'data'    => $this->realEstateService->serialiser($logement),
+            'data'    => $this->realEstateService->serialiserDetail($logement),
         ], Response::HTTP_OK);
     }
+
+	/* -------------------------------------------------- */
+	/*    GET /api/real-estates/slug/{slug}/reviews       */
+	/* -------------------------------------------------- */
+	#[Route('/real-estates/slug/{slug}/reviews', name: 'reviews', methods: ['GET'])]
+	public function reviews(string $slug): JsonResponse
+	{
+		$re = $this->realEstateService->trouverParSlug($slug);
+
+		if (!$re) {
+			return $this->json([
+				'success' => false,
+				'message' => "Logement introuvable",
+			], Response::HTTP_NOT_FOUND);
+		}
+
+		$detail = $this->realEstateService->serialiserDetail($re);
+
+		return $this->json([
+			'success'      => true,
+			'note_moyenne' => $detail['note_moyenne'],
+			'nb_avis'      => $detail['nb_avis'],
+			'data'         => $detail['reviews'],
+		], Response::HTTP_OK);
+	}
+
+	/* -------------------------------------------------- */
+	/*   GET /api/real-estates/slug/{slug}/availability   */
+	/* -------------------------------------------------- */
+	#[Route('/real-estates/slug/{slug}/availability', name: 'availability', methods: ['GET'])]
+	public function availability(string $slug): JsonResponse
+	{
+		$re = $this->realEstateService->trouverParSlug($slug);
+
+		if (!$re) {
+			return $this->json([
+				'success' => false,
+				'message' => "Logement introuvable",
+			], Response::HTTP_NOT_FOUND);
+		}
+
+		return $this->json([
+			'success' => true,
+			'data'    => $this->realEstateService->getDisponibilites($re),
+		], Response::HTTP_OK);
+	}
+
+	/* -------------------------------------------------- */
+	/*    GET /api/real-estates/slug/{slug}               */
+	/* -------------------------------------------------- */
+	#[Route('/real-estates/slug/{slug}', name: 'show_by_slug', methods: ['GET'])]
+	public function showBySlug(string $slug): JsonResponse
+	{
+		$re = $this->realEstateService->trouverParSlug($slug);
+
+		if (!$re) {
+			return $this->json([
+				'success' => false,
+				'message' => "Logement « $slug » introuvable",
+			], Response::HTTP_NOT_FOUND);
+		}
+
+		return $this->json([
+			'success' => true,
+			'data'    => $this->realEstateService->serialiserDetail($re),
+		], Response::HTTP_OK);
+	}
 }
