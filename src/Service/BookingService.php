@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Booking;
 use App\Entity\Enum\BookingStatus;
 use App\Entity\User;
+use App\Entity\RealEstate;
 use App\Repository\BookingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -94,4 +95,33 @@ class BookingService
     {
         return array_map(fn($b) => $this->serialiser($b), $bookings);
     }
+
+	public function creerReservation(
+		User             $guest,
+		RealEstate       $realEstate,
+		\DateTimeImmutable $dateArrivee,
+		\DateTimeImmutable $dateDepart,
+		int              $nbNuits,
+		int              $nbVoyageurs,
+		float            $montant,
+		?string          $note = null,
+	): Booking
+	{
+		$booking = new Booking();
+		$booking->setGuest      ($guest);
+		$booking->setRealEstate ($realEstate);
+		$booking->setDateArrivee($dateArrivee);
+		$booking->setDateDepart ($dateDepart);
+		$booking->setNbNuits    ($nbNuits);
+		$booking->setNbVoyageurs($nbVoyageurs);
+		$booking->setMontant    ($montant);
+		$booking->setStatut     (BookingStatus::EN_ATTENTE);
+		$booking->setNote       ($note);
+
+		$this->em->persist($booking);
+		$this->em->flush();
+
+		return $booking;
+	}
+
 }
